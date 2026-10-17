@@ -3,7 +3,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pathlib import Path
-
+import os
+import urllib.request
 import pandas as pd
 import joblib
 import json
@@ -39,10 +40,24 @@ templates = Jinja2Templates(
 # ==========================================
 
 MODEL_PATH = BASE_DIR / "improved_demand_prediction_model.pkl"
+MODEL_DOWNLOAD_URL = "https://drive.google.com/file/d/1I63DgXwzVPuAU4O_0jnTREhtlJ2PmcUf/view?usp=drive_link"
 
-model = joblib.load(MODEL_PATH)
+if not MODEL_PATH.exists():
+    print("Model file not found locally. Downloading from cloud storage...")
+    try:
+        # Downloads the file automatically if it's missing (e.g., when deployed on a cloud server or fresh clone)
+        urllib.request.urlretrieve(MODEL_DOWNLOAD_URL, MODEL_PATH)
+        print("Model downloaded successfully!")
+    except Exception as e:
+        print(f"Error downloading model: {e}")
 
-print("Machine Learning Model Loaded Successfully!")
+# Load the model
+try:
+    model = joblib.load(MODEL_PATH)
+    print("Machine Learning Model Loaded Successfully!")
+except Exception as e:
+    model = None
+    print(f"Warning: Could not load model. Error: {e}")
 
 
 # ==========================================
@@ -54,7 +69,7 @@ def home(request: Request):
 
     return templates.TemplateResponse(
         request=request,
-        name="inventory_replenishment.html"
+        name="index.html"
     )
 
 
