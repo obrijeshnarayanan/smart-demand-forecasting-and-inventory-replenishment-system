@@ -40,7 +40,7 @@ templates = Jinja2Templates(
 # ==========================================
 
 MODEL_PATH = BASE_DIR / "improved_demand_prediction_model.pkl"
-MODEL_DOWNLOAD_URL = "https://drive.google.com/file/d/1I63DgXwzVPuAU4O_0jnTREhtlJ2PmcUf/view?usp=drive_link"
+MODEL_DOWNLOAD_URL = "https://drive.google.com/uc?export=download&id=1I63DgXwzVPuAU4O_0jnTREhtlJ2PmcUf](https://drive.google.com/uc?export=download&id=1I63DgXwzVPuAU4O_0jnTREhtlJ2PmcUf)"
 
 if not MODEL_PATH.exists():
     print("Model file not found locally. Downloading from cloud storage...")
