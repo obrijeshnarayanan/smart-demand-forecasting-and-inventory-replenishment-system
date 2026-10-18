@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pathlib import Path
 import os
+from fastapi.middleware.cors import CORSMiddleware
 import urllib.request
 import pandas as pd
 import joblib
@@ -21,6 +22,13 @@ app = FastAPI(
     title="Smart Inventory Replenishment API",
     description="AI-Based Inventory Demand Prediction and Replenishment System",
     version="2.0"
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Or specify your exact GitHub Pages URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
