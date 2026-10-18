@@ -1578,194 +1578,92 @@ footer p {
 
 let weatherLoaded = false;
 async function fetchLiveWeather() {
-
-    const city =
-        document.getElementById(
-            "weather_city"
-        ).value.trim();
-
-    const weatherBox =
-        document.getElementById(
-            "weather-result"
-        );
+    const city = document.getElementById("weather_city").value.trim();
+    const weatherBox = document.getElementById("weather-result");
 
     if (!city) {
-
-        weatherBox.innerHTML =
-            "<p>Please enter a city name.</p>";
-
+        weatherBox.innerHTML = "<p>Please enter a city name.</p>";
         return;
-
     }
 
-    weatherBox.innerHTML = `
-
-        <p>
-            🌐 Connecting to Open-Meteo...
-        </p>
-
-    `;
+    weatherBox.innerHTML = `<p>🌐 Connecting to Open-Meteo...</p>`;
 
     try {
+        // 1. Get coordinates for the entered city using Open-Meteo Geocoding API
+        const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+        const geoData = await geoResponse.json();
 
-        const response = await fetch(
-            `/weather?city=${encodeURIComponent(city)}`
-        );
-
-        if (!response.ok) {
-
-            const error =
-                await response.json();
-
-            throw new Error(
-                error.detail ||
-                "Weather request failed"
-            );
-
+        if (!geoData.results || geoData.results.length === 0) {
+            throw new Error("City not found");
         }
 
-        const data =
-            await response.json();
+        const { latitude, longitude, name, country } = geoData.results[0];
 
-        const location =
-            data.location;
+        // 2. Fetch live weather using latitude and longitude
+        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m`);
+        
+        if (!weatherResponse.ok) {
+            throw new Error("Weather request failed");
+        }
 
-        const weather =
-            data.weather;
+        const weatherData = await weatherResponse.json();
+        const current = weatherData.current;
+
+        // Map WMO weather codes to conditions expected by your model dropdown
+        let condition = "Sunny";
+        if (current.weather_code > 0 && current.weather_code < 50) condition = "Cloudy";
+        if (current.weather_code >= 50) condition = "Rainy";
 
         weatherLoaded = true;
-        // Automatically update the
-        // model's weather input.
 
-        document.getElementById(
-            "weather_condition"
-        ).value =
-            weather.weather_condition;
-
+        // Automatically update the form's weather condition dropdown
+        document.getElementById("weather_condition").value = condition;
 
         weatherBox.innerHTML = `
-
             <div class="weather-dashboard">
-
                 <div class="weather-card">
-
                     <h3>📍 Location</h3>
-
-                    <strong>
-                        ${location.name}
-                    </strong>
-
-                    <p>
-                        ${location.country}
-                    </p>
-
+                    <strong>${name}</strong>
+                    <p>${country || ''}</p>
                 </div>
-
-
                 <div class="weather-card">
-
                     <h3>🌦️ Condition</h3>
-
-                    <strong>
-                        ${weather.weather_condition}
-                    </strong>
-
-                    <p>
-                        ${weather.weather_description}
-                    </p>
-
+                    <strong>${condition}</strong>
+                    <p>WMO Code: ${current.weather_code}</p>
                 </div>
-
-
                 <div class="weather-card">
-
                     <h3>🌡️ Temperature</h3>
-
-                    <strong>
-                        ${weather.temperature} °C
-                    </strong>
-
+                    <strong>${current.temperature_2m} °C</strong>
                 </div>
-
-
                 <div class="weather-card">
-
                     <h3>💧 Humidity</h3>
-
-                    <strong>
-                        ${weather.humidity} %
-                    </strong>
-
+                    <strong>${current.relative_humidity_2m} %</strong>
                 </div>
-
-
                 <div class="weather-card">
-
                     <h3>🌧️ Rain</h3>
-
-                    <strong>
-                        ${weather.rain} mm
-                    </strong>
-
+                    <strong>${current.precipitation} mm</strong>
                 </div>
-
-
                 <div class="weather-card">
-
                     <h3>💨 Wind</h3>
-
-                    <strong>
-                        ${weather.wind_speed} km/h
-                    </strong>
-
+                    <strong>${current.wind_speed_10m} km/h</strong>
                 </div>
-
             </div>
-
-
             <div class="api-status">
-
                 🟢 Open-Meteo API Connected
-
                 <br>
-
-                Last Updated:
-                ${weather.time}
-
+                Last Updated: ${current.time}
             </div>
-
         `;
-
-    }
-
-    catch (error) {
-
+    } catch (error) {
         console.error(error);
-
         weatherLoaded = false;
-
         weatherBox.innerHTML = `
-
-            <p>
-
-                🔴 Unable to retrieve live
-                weather data.
-
-            </p>
-
-            <p>
-
-                ${error.message}
-
-            </p>
-
+            <p>🔴 Unable to retrieve live weather data.</p>
+            <p>${error.message}</p>
         `;
-
     }
-
 }
-
-async function startPrediction() {
+   async function startPrediction() {
         
         if (!weatherLoaded) {
 
