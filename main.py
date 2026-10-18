@@ -640,3 +640,7 @@ def predict_inventory(data: InventoryInput):
             data.weather_condition
 
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.main.run("main:app", host="127.0.0.1", port=8000, reload=True)
