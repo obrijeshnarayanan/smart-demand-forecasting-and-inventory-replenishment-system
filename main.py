@@ -38,9 +38,7 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-templates = Jinja2Templates(
-    directory=str(BASE_DIR / "template")
-)
+templates = Jinja2Templates(directory=str(BASE_DIR))
 
 
 # ==========================================
